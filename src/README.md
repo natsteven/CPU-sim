@@ -1,0 +1,1 @@
+This is our Computer Architecture final project, implementing a pipelined simple 12 CPU
