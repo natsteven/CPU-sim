@@ -1,8 +1,18 @@
 public class CPU {
-    Stage IF = new IF();
-    Stage ID = new ID();
-    Stage EX = new EX();
-    Stage MEM = new MEM();
-    Stage WB = new WB();
+    private Stage IF, ID, EX, MEM, WB;
+    private int cycle;
+
+    public CPU() {
+        IF = new IF();
+        ID = new ID();
+        EX = new EX();
+        MEM = new MEM();
+        WB = new WB();
+        cycle = 0;
+    }
+
+    public void clock(){
+        cycle++;
+    }
 
 }
