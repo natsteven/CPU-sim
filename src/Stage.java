@@ -1,8 +1,9 @@
 public abstract class Stage {
    private boolean locked = false;
+   protected Memory memory;
 
-   public Stage() {
-
+   public Stage(Memory memory) {
+      this.memory = memory;
    }
 
     public void lock() {
@@ -17,5 +18,5 @@ public abstract class Stage {
         return locked;
     }
 
-    public abstract void process();
+    public abstract void process() throws Exception;
 }

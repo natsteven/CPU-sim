@@ -1,11 +1,30 @@
 public class Instruction {
-    public String opcode;
-    public Integer operand1;
-    public Integer operand2;
+    static public enum OPERATION {
+        JMP,
+        JN,
+        JZ,
+        LOAD,
+        STORE,
+        LOADI,
+        STOREI,
+        AND,
+        OR,
+        ADD,
+        SUB,
+        HALT,
+        NOOP
+    };
 
-    public Instruction(String opcode, Integer operand1, Integer operand2) {
-        this.opcode = opcode;
-        this.operand1 = operand1;
-        this.operand2 = operand2;
+    public Instruction.OPERATION operation;
+    public Integer operand;
+
+    public Instruction(Instruction.OPERATION operation, Integer operand) {
+        this.operation = operation;
+        this.operand = operand;
     }
+
+    public String toString() {
+        return "Operation: " + operation.toString() + ", operand: 0x" + String.format("%02X",operand);
+    }
+
 }
