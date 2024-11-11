@@ -59,6 +59,11 @@ public class CPU {
         cycle++;
         WB.process();
 
+        if (cycle > 99999) {
+            memory.setHalt(true);
+            System.out.println("Probably an issue :)");
+        }
+
     }
 
     public void loadMemory(String program) {
