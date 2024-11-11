@@ -12,51 +12,25 @@ public class ID extends Stage {
     public void process() {
         int instructionBits = rawInstruction >> 8;
         int operand = rawInstruction & 0x0FF;
-        Instruction.OPERATION operation;
-        switch (instructionBits) {
-            case 0x0:
-                operation = Instruction.OPERATION.JMP;
-                break;
-            case 0x1:
-                operation = Instruction.OPERATION.JN;
-                break;
-            case 0x2:
-                operation = Instruction.OPERATION.JZ;
-                break;
-            case 0x4:
-                operation = Instruction.OPERATION.LOAD;
-                break;
-            case 0x5:
-                operation = Instruction.OPERATION.STORE;
-                break;
-            case 0x6:
-                operation = Instruction.OPERATION.LOADI;
-                break;
-            case 0x7:
-                operation = Instruction.OPERATION.STOREI;
-                break;
-            case 0x8:
-                operation = Instruction.OPERATION.AND;
-                break;
-            case 0x9:
-                operation = Instruction.OPERATION.OR;
-                break;
-            case 0xA:
-                operation = Instruction.OPERATION.ADD;
-                break;
-            case 0xB:
-                operation = Instruction.OPERATION.SUB;
-                break;
-            case 0xF:
-                operation = Instruction.OPERATION.HALT;
-                break;
-            default:
+        Instruction.OPERATION operation = switch (instructionBits) {
+            case 0x0 -> Instruction.OPERATION.JMP;
+            case 0x1 -> Instruction.OPERATION.JN;
+            case 0x2 -> Instruction.OPERATION.JZ;
+            case 0x4 -> Instruction.OPERATION.LOAD;
+            case 0x5 -> Instruction.OPERATION.STORE;
+            case 0x6 -> Instruction.OPERATION.LOADI;
+            case 0x7 -> Instruction.OPERATION.STOREI;
+            case 0x8 -> Instruction.OPERATION.AND;
+            case 0x9 -> Instruction.OPERATION.OR;
+            case 0xA -> Instruction.OPERATION.ADD;
+            case 0xB -> Instruction.OPERATION.SUB;
+            case 0xF -> Instruction.OPERATION.HALT;
+            default ->
                 // noop
-                operation = Instruction.OPERATION.NOOP;
-                break;
-        }
+                    Instruction.OPERATION.NOOP;
+        };
         decodedInstruction = new Instruction(operation, operand);
-        System.out.println("ID - " + decodedInstruction.toString());
+        System.out.println("ID - " + decodedInstruction);
     }
 
     public void setInstructionRaw(int instruction) {

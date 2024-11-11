@@ -2,16 +2,14 @@ import java.util.Arrays;
 
 public class CPU {
     // Stages
-    private IF IF;
-    private ID ID;
-    private EX EX;
-    private MEM MEM;
-    private WB WB;
+    private final IF IF;
+    private final ID ID;
+    private final EX EX;
+    private final MEM MEM;
+    private final WB WB;
 
     private int cycle;
-    private Memory memory;
-    private int programCounter;
-    private boolean haltFlag;
+    private final Memory memory;
 
     public CPU() {
         memory = new Memory(1024);
@@ -21,19 +19,17 @@ public class CPU {
         EX = new EX(memory);
         MEM = new MEM(memory);
         WB = new WB(memory);
-        cycle = 0;
-        programCounter = 0;
-        haltFlag = false;
+        cycle = 1;
     }
 
     public int run() {
         try {
-            while(!haltFlag) {
+            while(!memory.getHaltFlag()) {
                 clock();
             }
             return 0;
         } catch (Exception e) {
-            System.out.println("Encountered Exception on line " + programCounter);
+            System.out.println("Encountered Exception on line " + memory.getProgramCounter());
             e.printStackTrace();
             return 1;
         }
@@ -42,21 +38,27 @@ public class CPU {
     public void clock() throws Exception {
         System.out.println("-- Cycle: " + cycle + " -----------------");
         cycle++;
-        IF.setProgramCounter(programCounter);
+        // program counter is set on initialization of memory
         IF.process();
 
+        System.out.println("-- Cycle: " + cycle + " -----------------");
+        cycle++;
         ID.setInstructionRaw(IF.getFetchedInstruction());
         ID.process();
 
-        //EX.setInstruction(ID.getDecodedInstruction());
+        System.out.println("-- Cycle: " + cycle + " -----------------");
+        cycle++;
+        EX.setInstruction(ID.getDecodedInstruction());
+        EX.process();
 
-        // temp until EX stage can set the flag
-        if (programCounter >= 15) {
-            haltFlag = true;
-        }
-        else {
-            programCounter++;
-        }
+        System.out.println("-- Cycle: " + cycle + " -----------------");
+        cycle++;
+        MEM.process();
+
+        System.out.println("-- Cycle: " + cycle + " -----------------");
+        cycle++;
+        WB.process();
+
     }
 
     public void loadMemory(String program) {
