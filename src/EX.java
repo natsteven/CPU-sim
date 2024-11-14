@@ -1,9 +1,9 @@
-public class EX extends Stage{
+public class EX extends Stage {
 
     private Instruction instruction;
 
-    public EX(Memory memory) {
-        super(memory);
+    public EX(Memory memory, Control control) {
+        super(memory, control);
     }
 
     public void setInstruction(Instruction instruction) {
@@ -11,62 +11,62 @@ public class EX extends Stage{
     }
     
     @Override
-    public void process() {
+    public void process() throws Exception {
         System.out.println("EX - " + instruction);
         if (instruction.isArithmetic()) {
             alu();
-            memory.setALU(true);
+            control.alu = true;
         } else if (instruction.isJump()) {
             branch();
         } else if (instruction.isMemory()) {
-            memory();
-            memory.setMemAcc(true);
+            memoryPrep();
+            control.memAcc = true;
         } else if (instruction.operation == Instruction.OPERATION.HALT) {
-            memory.setHalt(true);
+            control.halt = true;
         } else {
             System.out.println("Instruction not recognized");
             System.exit(1);
         }
     }
 
-    public void alu () {
-        int accumulator = memory.getAccumulator();
+    public void alu () throws Exception {
+        int accumulator = control.accumulator;
         if (instruction.operation == Instruction.OPERATION.ADD) {
-            accumulator += instruction.operand;
+            accumulator += memory.readMemory(instruction.operand);
         }else if (instruction.operation == Instruction.OPERATION.SUB) {
-            accumulator -= instruction.operand;
+            accumulator -= memory.readMemory(instruction.operand);
         } else if (instruction.operation == Instruction.OPERATION.AND) {
-            accumulator &= instruction.operand;
+            accumulator &= memory.readMemory(instruction.operand);
         } else if (instruction.operation == Instruction.OPERATION.OR) {
-            accumulator |= instruction.operand;
+            accumulator |= memory.readMemory(instruction.operand);
         }
-        memory.setExRegister(accumulator);
+        control.exRegister = accumulator;
     }
 
     public void branch () {
-        int accumulator = memory.getAccumulator();
+        int accumulator = control.accumulator;
         if (instruction.operation == Instruction.OPERATION.JMP) {
-            memory.setJump(true);
+            control.jump = true;
         } else if (instruction.operation == Instruction.OPERATION.JN) {
             if (accumulator < 0) {
-                memory.setJump(true);
+                control.jump = true;
             }
         } else if (instruction.operation == Instruction.OPERATION.JZ) {
             if (accumulator == 0) {
-                memory.setJump(true);
+                control.jump = true;
             }
         }
-        memory.setExRegister(instruction.operand);
+        control.exRegister = instruction.operand;
     }
 
-    public void memory () {
-        memory.setExRegister(instruction.operand);
+    public void memoryPrep() {
+        control.exRegister = instruction.operand;
         if (instruction.operation == Instruction.OPERATION.LOAD || instruction.operation == Instruction.OPERATION.LOADI) {
-            memory.setLoadOrStore(true);
-            memory.setDirect(instruction.operation == Instruction.OPERATION.LOAD);
+            control.loadOrStore = true;
+            control.direct = (instruction.operation == Instruction.OPERATION.LOAD);
         } else if (instruction.operation == Instruction.OPERATION.STORE || instruction.operation == Instruction.OPERATION.STOREI) {
-            memory.setLoadOrStore(false);
-            memory.setDirect(instruction.operation == Instruction.OPERATION.STORE);
+            control.loadOrStore = false;
+            control.direct = (instruction.operation == Instruction.OPERATION.STORE);
         }
     }
 

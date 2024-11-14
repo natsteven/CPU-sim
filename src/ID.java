@@ -3,8 +3,8 @@ public class ID extends Stage {
     private int rawInstruction;
     private Instruction decodedInstruction;
 
-    public ID(Memory memory) {
-        super(memory);
+    public ID(Memory memory, Control control) {
+        super(memory, control);
         rawInstruction = 0;
     }
 

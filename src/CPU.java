@@ -10,32 +10,34 @@ public class CPU {
 
     private int cycle;
     private final Memory memory;
+    private final Control control;
 
     public CPU() {
         memory = new Memory(1024);
+        control = new Control();
 
-        IF = new IF(memory);
-        ID = new ID(memory);
-        EX = new EX(memory);
-        MEM = new MEM(memory);
-        WB = new WB(memory);
+        IF = new IF(memory, control);
+        ID = new ID(memory, control);
+        EX = new EX(memory, control);
+        MEM = new MEM(memory, control);
+        WB = new WB(memory, control);
         cycle = 1;
     }
 
     public int run() {
         try {
-            while(!memory.getHaltFlag()) {
-                clock();
+            while(!control.halt) {
+                singleStage();
             }
             return 0;
         } catch (Exception e) {
-            System.out.println("Encountered Exception on line " + memory.getProgramCounter());
+            System.out.println("Encountered Exception on line " + control.programCounter);
             e.printStackTrace();
             return 1;
         }
     }
 
-    public void clock() throws Exception {
+    public void singleStage() throws Exception {
         System.out.println("-- Cycle: " + cycle + " -----------------");
         cycle++;
         // program counter is set on initialization of memory
@@ -60,7 +62,7 @@ public class CPU {
         WB.process();
 
         if (cycle > 99999) {
-            memory.setHalt(true);
+            control.halt = true;
             System.out.println("Probably an issue :)");
         }
 

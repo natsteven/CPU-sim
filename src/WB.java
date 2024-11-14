@@ -1,24 +1,24 @@
 public class WB extends Stage {
     
-    public WB(Memory memory) {
-        super(memory);
+    public WB(Memory memory, Control control) {
+        super(memory, control);
     }
 
     @Override
     public void process() {
         System.out.println("WB");
-        memory.incrementProgramCounter();
-        if (memory.getJump()) {
-            memory.setProgramCounter(memory.getExRegister());
-            memory.setJump(false);
-        }else if (memory.getALU()) {
-            memory.setAccumulator(memory.getExRegister());
-            memory.setALU(false);
-        } else if (memory.getMemAcc()) {
-            if (memory.getLoadOrStore()) { // Load
-                memory.setAccumulator(memory.getMemRegister());
+        control.programCounter++;
+        if (control.jump) {
+            control.programCounter = control.exRegister;
+            control.jump = false;
+        }else if (control.alu) {
+            control.accumulator = control.exRegister;
+            control.alu = false;
+        } else if (control.memAcc) {
+            if (control.loadOrStore) { // Load
+                control.accumulator = control.memRegister;
             }
-            memory.setMemAcc(false);
+            control.memAcc = false;
         }
     }
 }

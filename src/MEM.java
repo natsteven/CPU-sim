@@ -1,25 +1,26 @@
 public class MEM extends Stage {
 
-    public MEM(Memory memory) {
-        super(memory);
+    public MEM(Memory memory, Control control) {
+        super(memory, control);
     }
     
     @Override
     public void process() throws Exception {
         System.out.println("MEM");
-        if (memory.getMemAcc()) {
+        if (control.memAcc) {
             System.out.println("Memory access!");
-            if (memory.getLoadOrStore()) { // Load
-                if (memory.getDirect()) {
-                    memory.setMemRegister(memory.getExRegister()); // directly load operand
+            if (control.loadOrStore) { // Load
+                if (control.direct) {
+                    control.memRegister = (memory.readMemory(control.exRegister)); // directly load operand
                 } else {
-                    memory.setMemRegister(memory.readMemory(memory.getExRegister())); // get value from pointer to memory
+                    int address = memory.readMemory(control.exRegister);
+                    control.memRegister = (memory.readMemory(address)); // get value from pointer to memory
                 }
             } else { // Store
-                if (memory.getDirect()) {
-                    memory.load(memory.getExRegister(), memory.getAccumulator());
+                if (control.direct) {
+                    memory.load(control.exRegister, control.accumulator);
                 } else {
-                    memory.load(memory.readMemory(memory.getExRegister()), memory.getAccumulator());
+                    memory.load(memory.readMemory(control.exRegister), control.accumulator);
                 }
             }
         }

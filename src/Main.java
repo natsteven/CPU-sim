@@ -4,18 +4,17 @@ import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello world!");
 
         CPU cpu  = new CPU();
         String program;
         try {
-            program = Files.readString(Paths.get("src/programs","max5.txt"));
+            program = Files.readString(Paths.get("programs/max5.txt"));
             cpu.loadMemory(program);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         cpu.run();
-        
+
     }
 }
