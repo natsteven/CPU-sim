@@ -84,13 +84,12 @@ public class CPU {
 
     public String arrayToString(int[] arr) {
         StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for (int i = 0; i < arr.length; i++) {
-            sb.append(arr[i]);
-            if (i < arr.length - 1) {
-                sb.append(", ");
-            }
+        sb.append("[ ");
+        for (int j : arr) {
+            sb.append(j);
+            sb.append(", ");
         }
+        sb.deleteCharAt(sb.length()-2);
         sb.append("]");
         return sb.toString();
     }
