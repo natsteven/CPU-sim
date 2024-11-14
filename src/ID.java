@@ -10,7 +10,7 @@ public class ID extends Stage {
 
     @Override
     public void process() {
-        int instructionBits = rawInstruction >> 8;
+        int instructionBits = (rawInstruction >> 8) & 0xF;
         int operand = rawInstruction & 0x0FF;
         Instruction.OPERATION operation = switch (instructionBits) {
             case 0x0 -> Instruction.OPERATION.JMP;

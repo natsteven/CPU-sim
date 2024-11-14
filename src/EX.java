@@ -32,9 +32,11 @@ public class EX extends Stage {
     public void alu () throws Exception {
         int accumulator = control.accumulator;
         if (instruction.operation == Instruction.OPERATION.ADD) {
-            accumulator += memory.readMemory(instruction.operand);
+            accumulator += as12bitInt(memory.readMemory(instruction.operand));
+            accumulator = accumulator & 0xFFF;
         }else if (instruction.operation == Instruction.OPERATION.SUB) {
-            accumulator -= memory.readMemory(instruction.operand);
+            accumulator -= as12bitInt(memory.readMemory(instruction.operand));
+            accumulator = accumulator & 0xFFF;
         } else if (instruction.operation == Instruction.OPERATION.AND) {
             accumulator &= memory.readMemory(instruction.operand);
         } else if (instruction.operation == Instruction.OPERATION.OR) {
@@ -48,7 +50,7 @@ public class EX extends Stage {
         if (instruction.operation == Instruction.OPERATION.JMP) {
             control.jump = true;
         } else if (instruction.operation == Instruction.OPERATION.JN) {
-            if (accumulator < 0) {
+            if (as12bitInt(accumulator) < 0) {
                 control.jump = true;
             }
         } else if (instruction.operation == Instruction.OPERATION.JZ) {
@@ -68,6 +70,10 @@ public class EX extends Stage {
             control.loadOrStore = false;
             control.direct = (instruction.operation == Instruction.OPERATION.STORE);
         }
+    }
+
+    private static int as12bitInt(int arg) {
+        return (arg << (32-12))>>(32-12);
     }
 
 }

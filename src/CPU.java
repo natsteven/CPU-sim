@@ -10,6 +10,10 @@ public class CPU {
     private final Memory memory;
     private final Control control;
 
+    //debug values
+    private int memWatchStart = -1;
+    private int memWatchEnd = -1;
+
     public CPU() {
         memory = new Memory(1024);
         control = new Control();
@@ -37,29 +41,32 @@ public class CPU {
 
     public void singleStage() throws Exception {
         System.out.println("-- Cycle: " + cycle + " -----------------");
+        System.out.println("Program Counter: 0x" + String.format("%02X",control.programCounter));
+        System.out.println("Accumulator: 0x" + String.format("%03X",control.accumulator));
+        if(memWatchEnd >= 0) {
+            int[] memdump = memory.readMemory(memWatchStart, memWatchEnd - memWatchStart + 1);
+            System.out.println("Memdump:");
+            System.out.println(arrayToString(memdump));
+        }
+
         cycle++;
-        // program counter is set on initialization of memory
         IF.process();
 
-        System.out.println("-- Cycle: " + cycle + " -----------------");
         cycle++;
         ID.setInstructionRaw(IF.getFetchedInstruction());
         ID.process();
 
-        System.out.println("-- Cycle: " + cycle + " -----------------");
         cycle++;
         EX.setInstruction(ID.getDecodedInstruction());
         EX.process();
 
-        System.out.println("-- Cycle: " + cycle + " -----------------");
         cycle++;
         MEM.process();
 
-        System.out.println("-- Cycle: " + cycle + " -----------------");
         cycle++;
         WB.process();
 
-        if (cycle > 99999) {
+        if (cycle > 500) {
             control.halt = true;
             System.out.println("Probably an issue :)");
         }
@@ -74,7 +81,7 @@ public class CPU {
             String hexLine = lines[i].substring(0,3).trim();
             result[i] = Integer.parseInt(hexLine, 16) & 0xFFF;
         }
-        System.out.println(arrayToString(result));
+        System.out.println("Loading Program: " + arrayToString(result));
         try {
             memory.loadSection(0,programLength,result);
         } catch (Exception e) {
@@ -82,16 +89,21 @@ public class CPU {
         }
     }
 
-    public String arrayToString(int[] arr) {
+    public static String arrayToString(int[] arr) {
         StringBuilder sb = new StringBuilder();
         sb.append("[ ");
         for (int j : arr) {
-            sb.append(j);
+            sb.append("0x" + String.format("%03X",j));
             sb.append(", ");
         }
         sb.deleteCharAt(sb.length()-2);
         sb.append("]");
         return sb.toString();
+    }
+
+    public void watchMem(int start, int end) {
+        memWatchStart = start;
+        memWatchEnd = end;
     }
 
 }
