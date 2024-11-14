@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public class CPU {
     // Stages
     private final IF IF;
@@ -76,12 +74,25 @@ public class CPU {
             String hexLine = lines[i].substring(0,3).trim();
             result[i] = Integer.parseInt(hexLine, 16) & 0xFFF;
         }
-        System.out.println(Arrays.toString(result));
+        System.out.println(arrayToString(result));
         try {
             memory.loadSection(0,programLength,result);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String arrayToString(int[] arr) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for (int i = 0; i < arr.length; i++) {
+            sb.append(arr[i]);
+            if (i < arr.length - 1) {
+                sb.append(", ");
+            }
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
 }
