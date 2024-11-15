@@ -75,6 +75,7 @@ public class EX extends Stage {
                 stageControl.jump = true;
             }
         }
+        control.controlHazard = false;
         this.outReg = instruction.operand;
     }
 
