@@ -6,25 +6,33 @@ public class MEM extends Stage {
     
     @Override
     public void process() throws Exception {
-        System.out.println("MEM");
-        if (control.memAcc) {
-            System.out.println("Memory access!");
-            if (control.loadOrStore) { // Load
-                if (control.direct) {
-                    control.memRegister = (memory.readMemory(control.exRegister)); // directly load operand
+        if (this.inReg == null) {
+            System.out.println("MEM - No input");
+            return;
+        }
+
+        stageControl = control.stages.get(3);
+
+        System.out.println("MEM - 0x" + String.format("%03X",this.inReg) + ", memAcc: " + stageControl.memAcc + ", load/store: " + stageControl.loadOrStore + ", direct: " + stageControl.direct);
+        if (stageControl.memAcc) {
+            if (stageControl.loadOrStore) { // Load
+                if (stageControl.direct) {
+                    this.outReg = (memory.readMemory(this.inReg)); // directly load operand
                 } else {
-                    int address = memory.readMemory(control.exRegister);
-                    control.memRegister = (memory.readMemory(address)); // get value from pointer to memory
+                    int address = memory.readMemory(this.inReg);
+                    this.outReg = (memory.readMemory(address)); // get value from pointer to memory
                 }
             } else { // Store
-                if (control.direct) {
-                    memory.load(control.exRegister, control.accumulator);
+                this.outReg = this.inReg; //for readability/debugging
+                if (stageControl.direct) {
+                    memory.load(this.inReg, control.accumulator);
                 } else {
-                    memory.load(memory.readMemory(control.exRegister), control.accumulator);
+                    memory.load(memory.readMemory(this.inReg), control.accumulator);
                 }
             }
+        } else {
+            this.outReg = this.inReg;
         }
-        // else no memory access
     }
 
 

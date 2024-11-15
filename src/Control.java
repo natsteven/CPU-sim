@@ -1,52 +1,65 @@
+import java.util.LinkedList;
+
 public class Control {
     int programCounter;
     int accumulator;
-    int exRegister;
-    int memRegister;
-    boolean alu;
-    boolean memAcc;
-    boolean loadOrStore;
-    boolean direct; // uggh this is probably a bad way to do it
+
+    boolean dataHazard;
+    boolean controlHazard;
     boolean halt;
-    boolean jump;
+
+    LinkedList<StageControl> stages;
+
+    // create a pseudo state machine, this is more than what is necessary
+    public static class StageControl {
+        //boolean STALL;
+        boolean alu;
+        boolean memAcc;
+        boolean loadOrStore;
+        boolean direct; // uggh this is probably a bad way to do it
+        boolean halt;
+        boolean jump;
+
+        public StageControl() {
+            //STALL = false;
+            alu = false;
+            memAcc = false;
+            loadOrStore = false;
+            direct = false;
+            halt = false;
+            jump = false;
+        }
+    }
 
     public Control() {
         programCounter = 0;
         accumulator = 0;
-        exRegister = 0;
-        memRegister = 0;
-        alu = false;
-        memAcc = false;
-        loadOrStore = false;
-        direct = false;
+        dataHazard = false;
+        controlHazard = false;
         halt = false;
-        jump = false;
+        stages = new LinkedList<StageControl>();
+        for (int i = 0; i < 5; i++) {
+            stages.add(new StageControl());
+        }
     }
 
-    public void reset() {
-        programCounter = 0;
-        accumulator = 0;
-        exRegister = 0;
-        memRegister = 0;
-        alu = false;
-        memAcc = false;
-        loadOrStore = false;
-        direct = false;
-        halt = false;
-        jump = false;
+    public boolean isStalling() {
+        return dataHazard || controlHazard;
     }
 
-    public void print() {
-        System.out.println("Control: " +
-                "PC: " + programCounter + ", " +
-                "ACC: " + accumulator + ", " +
-                "EX: " + exRegister + ", " +
-                "MEM: " + memRegister + ", " +
-                "ALU: " + alu + ", " +
-                "MEMACC: " + memAcc + ", " +
-                "LOAD/STORE: " + loadOrStore + ", " +
-                "DIRECT: " + direct + ", " +
-                "HALT: " + halt + ", " +
-                "JUMP: " + jump);
+//    public void stall() {
+//        stages.getFirst().STALL = true;
+//        stages.get(1).STALL = true;
+//        stages.get(2).STALL = true;
+//    }
+
+    public void cycleStages() {
+        if (!isStalling()) {
+            stages.addFirst(new StageControl());
+        } else {
+            stages.add(2, new StageControl()); // insert dummy stage at EX
+        }
+        stages.removeLast();
     }
+
 }

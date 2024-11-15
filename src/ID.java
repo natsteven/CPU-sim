@@ -10,6 +10,15 @@ public class ID extends Stage {
 
     @Override
     public void process() {
+        if (this.inReg == null) {
+            System.out.println("ID - No input");
+            return;
+        }
+        if (control.isStalling()) {
+            System.out.println("ID - Stalling - " + decodedInstruction);
+            return;
+        }
+        rawInstruction = this.inReg;
         int instructionBits = (rawInstruction >> 8) & 0xF;
         int operand = rawInstruction & 0x0FF;
         Instruction.OPERATION operation = switch (instructionBits) {
@@ -31,13 +40,6 @@ public class ID extends Stage {
         };
         decodedInstruction = new Instruction(operation, operand);
         System.out.println("ID - " + decodedInstruction);
-    }
-
-    public void setInstructionRaw(int instruction) {
-        rawInstruction = instruction;
-    }
-
-    public Instruction getDecodedInstruction() {
-        return decodedInstruction;
+        this.outReg = decodedInstruction.toInt();
     }
 }

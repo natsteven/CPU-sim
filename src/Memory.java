@@ -2,10 +2,12 @@ public class Memory {
 
     private final int[] memory;
     private final int memorySize;
+    private boolean locked;
 
     public Memory(int size) {
         memory = new int[size];
         memorySize = size;
+        locked = false;
     }
 
     /**
@@ -15,10 +17,12 @@ public class Memory {
      * @param value   value to load
      */
     public void load(int address, int value) throws Exception {
+        locked = true;
         if ((address > memorySize - 1) || (address < 0)) {
             throw new Exception("Attempt to load into memory outside of bounds at address: " + address);
         }
         memory[address] = value;
+        locked = false;
     }
 
     /**
@@ -29,9 +33,11 @@ public class Memory {
      * @param values       array of 12 bit values
      */
     public void loadSection(int startAddress, int size, int[] values) throws Exception {
+        locked = true;
         for (int i = 0; i < size; i++) {
             load(startAddress + i, values[i]);
         }
+        locked = false;
     }
 
     /**
@@ -42,9 +48,11 @@ public class Memory {
      * @throws Exception
      */
     public int readMemory(int address) throws Exception {
+        locked = true;
         if (isOutOfBounds(address, 1)) {
             throw new Exception("Attempt to read memory outside of bounds at address: " + address);
         }
+        locked = false;
         return memory[address];
     }
 
@@ -57,8 +65,10 @@ public class Memory {
         if (isOutOfBounds(address, length)) {
             throw new Exception("Attempt to read memory outside of bounds at address: " + address + " and length: " + length);
         }
+        locked = true;
         int[] ret = new int[length];
         System.arraycopy(memory, address, ret, 0, length);
+        locked = false;
         return ret;
     }
 
@@ -66,5 +76,9 @@ public class Memory {
         return (startAddress < 0) ||
                 (startAddress > memorySize - 1) ||
                 (startAddress + size > memorySize);
+    }
+
+    public boolean isLocked() {
+        return locked;
     }
 }

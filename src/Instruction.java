@@ -35,8 +35,23 @@ public class Instruction {
         return operation == OPERATION.LOAD || operation == OPERATION.STORE || operation == OPERATION.LOADI || operation == OPERATION.STOREI;
     }
 
+    public boolean isDataHazard() {
+        return isArithmetic() || operation == OPERATION.LOAD || operation == OPERATION.LOADI;
+    }
+
     public String toString() {
         return "Operation: " + operation.toString() + ", operand: 0x" + String.format("%02X",operand);
+    }
+
+    public int toInt() {
+        return (operation.ordinal() << 12) | (operand & 0xFFF);
+    }
+
+    public static Instruction fromInt(int val) {
+        int operationBits = (val >> 12) & 0xF;
+        int operand = val & 0xFFF;
+        OPERATION operation = OPERATION.values()[operationBits];
+        return new Instruction(operation, operand);
     }
 
 }

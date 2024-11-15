@@ -34,6 +34,10 @@ public class Main {
         else {
             System.out.println("Failed to load program");
         }
+
+        CPU newCPU = new CPU();
+        newCPU.loadMemory(program);
+        newCPU.pipelineNaive();
     
 
     }

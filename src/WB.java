@@ -6,19 +6,28 @@ public class WB extends Stage {
 
     @Override
     public void process() {
-        System.out.println("WB");
-        control.programCounter++;
-        if (control.jump) {
-            control.programCounter = control.exRegister;
-            control.jump = false;
-        }else if (control.alu) {
-            control.accumulator = control.exRegister;
-            control.alu = false;
-        } else if (control.memAcc) {
-            if (control.loadOrStore) { // Load
-                control.accumulator = control.memRegister;
+        if (this.inReg == null) {
+            System.out.println("WB - No input");
+            return;
+        }
+
+        stageControl = control.stages.get(4);
+
+        System.out.println("WB - 0x" + String.format("%03X",this.inReg) + ", jump: " + stageControl.jump + ", alu: " + stageControl.alu);
+        if (stageControl.jump) {
+            control.programCounter = this.inReg;
+            control.controlHazard = false;
+        }else if (stageControl.alu) {
+            control.accumulator = this.inReg;
+            control.dataHazard = false;
+        } else if (stageControl.memAcc) {
+            if (stageControl.loadOrStore) { // Load
+                control.accumulator = this.inReg;
+                control.dataHazard = false;
             }
-            control.memAcc = false;
+        }
+        if (stageControl.halt) {
+           control.halt = true;
         }
     }
 }

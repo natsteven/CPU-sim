@@ -6,7 +6,7 @@ public class CPU {
     private final MEM MEM;
     private final WB WB;
 
-    private int cycle;
+    public int cycle;
     private final Memory memory;
     private final Control control;
 
@@ -28,7 +28,7 @@ public class CPU {
 
     public int run() {
         try {
-            while(!control.halt) {
+            while (!control.halt) {
                 singleStage();
             }
             return 0;
@@ -40,32 +40,25 @@ public class CPU {
     }
 
     public void singleStage() throws Exception {
-        System.out.println("-- Cycle: " + cycle + " -----------------");
-        System.out.println("Program Counter: 0x" + String.format("%02X",control.programCounter));
-        System.out.println("Accumulator: 0x" + String.format("%03X",control.accumulator));
-        if(memWatchEnd >= 0) {
+        System.out.println(" ------------------------- ");
+        System.out.println("Program Counter: 0x" + String.format("%02X", control.programCounter));
+        System.out.println("Accumulator: 0x" + String.format("%03X", control.accumulator));
+        if (memWatchEnd >= 0) {
             int[] memdump = memory.readMemory(memWatchStart, memWatchEnd - memWatchStart + 1);
             System.out.println("Memdump:");
             System.out.println(arrayToString(memdump));
         }
 
-        cycle++;
         IF.process();
-
-        cycle++;
-        ID.setInstructionRaw(IF.getFetchedInstruction());
+        clockCycle();
         ID.process();
-
-        cycle++;
-        EX.setInstruction(ID.getDecodedInstruction());
+        clockCycle();
         EX.process();
-
-        cycle++;
+        clockCycle();
         MEM.process();
-
-        cycle++;
+        clockCycle();
         WB.process();
-
+        clockCycle();
         if (cycle > 500) {
             control.halt = true;
             System.out.println("Probably an issue :)");
@@ -73,17 +66,46 @@ public class CPU {
 
     }
 
+    public void pipelineNaive() {
+        try {
+            while (!control.halt) {
+                System.out.println(" ------------------------------ ");
+                System.out.println("Program Counter: 0x" + String.format("%02X", control.programCounter));
+                System.out.println("Accumulator: 0x" + String.format("%03X", control.accumulator));
+                if (memWatchEnd >= 0) {
+                    int[] memdump = memory.readMemory(memWatchStart, memWatchEnd - memWatchStart + 1);
+                    System.out.println("Memdump:");
+                    System.out.println(arrayToString(memdump));
+                }
+                clockCycle();
+                IF.process();
+                ID.process();
+                EX.process();
+                MEM.process();
+                WB.process();
+
+                if (cycle > 500) {
+                    control.halt = true;
+                    System.out.println("Probably an issue :)");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Encountered Exception on line " + control.programCounter);
+            e.printStackTrace();
+        }
+    }
+
     public void loadMemory(String program) {
         String[] lines = program.split("\n");
         int programLength = lines.length;
         int[] result = new int[programLength];
         for (int i = 0; i < programLength; i++) {
-            String hexLine = lines[i].substring(0,3).trim();
+            String hexLine = lines[i].substring(0, 3).trim();
             result[i] = Integer.parseInt(hexLine, 16) & 0xFFF;
         }
         System.out.println("Loading Program: " + arrayToString(result));
         try {
-            memory.loadSection(0,programLength,result);
+            memory.loadSection(0, programLength, result);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -93,10 +115,10 @@ public class CPU {
         StringBuilder sb = new StringBuilder();
         sb.append("[ ");
         for (int j : arr) {
-            sb.append("0x" + String.format("%03X",j));
+            sb.append("0x" + String.format("%03X", j));
             sb.append(", ");
         }
-        sb.deleteCharAt(sb.length()-2);
+        sb.deleteCharAt(sb.length() - 2);
         sb.append("]");
         return sb.toString();
     }
@@ -104,6 +126,19 @@ public class CPU {
     public void watchMem(int start, int end) {
         memWatchStart = start;
         memWatchEnd = end;
+    }
+
+    public void clockCycle() {
+        System.out.println("-- Cycle: " + cycle++ + " -----------------");
+        control.cycleStages();
+        ID.inReg = IF.outReg;
+        EX.inReg = ID.outReg;
+        MEM.inReg = EX.outReg;
+        WB.inReg = MEM.outReg;
+        if (control.isStalling()) {
+            EX.outReg = null;
+            MEM.outReg = null;
+        }
     }
 
 }
