@@ -33,13 +33,13 @@ public class Main {
         }
         if(program != null) {
             cpu1.loadMemory(program);
-            // cpu2.loadMemory(program);
+            cpu2.loadMemory(program);
             cpu1.run();
-            // cpu2.pipelineNaive();
+            cpu2.pipelineNaive();
 
             System.out.println("Cycles for " + programFile + ":");
             System.out.println("non-pipelined: " + cpu1.cycle);
-            System.out.println("pipelined: " + cpu2.cycle);
+            System.out.println("pipelined: " + cpu2.cycle + " stalls: " + cpu2.getStalls());
         }
         else {
             System.out.println("Failed to load program");

@@ -49,6 +49,10 @@ public class CPU {
         }
     }
 
+    public int getStalls() {
+        return ID.stallCounter;
+    }
+
     public void singleStage() throws Exception {
         System.out.println("-- Cycle: " + cycle++ + " -----------------");
         clockCycle();
@@ -217,7 +221,7 @@ public class CPU {
         if (EX.shouldJump) { // forwarding?
             programCounter = EX.resultOut;
             System.out.println("jumping and flushing");
-            // IF.programCounterIn = programCounter;
+            IF.programCounterIn = programCounter;
             IF.fetchedInstructionOut = 0xC00; // flush prev pipeline steps
             ID.rawInstructionIn = 0xC00;
             ID.flushPipelineQueue();

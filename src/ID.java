@@ -6,6 +6,7 @@ public class ID extends Stage {
     public int rawInstructionOut;
     public int programCounterIn;
     public boolean isStalled;
+    public int stallCounter;
 
     private ArrayList<Instruction> pipelineQueue;
 
@@ -16,6 +17,7 @@ public class ID extends Stage {
         rawInstructionOut = 0xD00;
         programCounterIn = 0x000;
         isStalled = false;
+        stallCounter = 0;
     }
 
     @Override
@@ -30,17 +32,20 @@ public class ID extends Stage {
             pipelineQueue.addFirst(new Instruction(Instruction.OPERATION.STALL, 0x00));
             rawInstructionOut = 0xC00;
             isStalled = true;
+            stallCounter++;
             System.out.println("ID - " + decodedInstruction + " - Stalling due to DATA HAZARD");
         }
         else if (controlHazard()) {
             pipelineQueue.addFirst(new Instruction(Instruction.OPERATION.STALL, 0x00));
             rawInstructionOut = 0xC00;
             isStalled = true;
+            stallCounter++;
             System.out.println("ID - " + decodedInstruction + " - Stalling due to CONTROL HAZARD");
         } else if (halt(decodedInstruction)) {
             pipelineQueue.addFirst(new Instruction(Instruction.OPERATION.STALL, 0x00));
             rawInstructionOut = 0xC00;
             isStalled = true;
+            stallCounter++;
             System.out.println("ID - " + decodedInstruction + " - Stalling due to HALT");
         }
         else {
@@ -86,7 +91,7 @@ public class ID extends Stage {
         pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
         pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
         pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
-//        pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
+        //pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
     }
 
 }
