@@ -1,22 +1,23 @@
 public class IF extends Stage {
     
-    private int fetchedInstruction;
+    public int fetchedInstructionOut;
+    public int programCounterIn;
 
-    public IF(Memory memory, Control control) {
-        super(memory, control);
-        fetchedInstruction = 0;
+    public IF(Memory memory) {
+        super(memory);
+        fetchedInstructionOut = 0xD00;
+        programCounterIn = 0x00;
     }
 
     public void process() throws Exception {
-        if (control.isStalling()) {
-            System.out.println("IF - Stalling - 0x" + String.format("%03X",fetchedInstruction));
-            return;
-        }
+        // if (control.isStalling()) {
+        //     System.out.println("IF - Stalling - 0x" + String.format("%03X",fetchedInstruction));
+        //     return;
+        // }
 
-        fetchedInstruction = memory.readMemory(control.programCounter++);
+        fetchedInstructionOut = memory.readMemory(programCounterIn);
         //System.out.println(String.format("0x%08X", 1));
-        System.out.println("IF - 0x" + String.format("%03X",fetchedInstruction));
-        this.outReg = fetchedInstruction;
+        System.out.println("IF - 0x" + String.format("%03X",fetchedInstructionOut));
     }
 
 }

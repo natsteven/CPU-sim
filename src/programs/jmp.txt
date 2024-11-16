@@ -1,0 +1,6 @@
+404 load ONE 00
+003 jmp end 01
+405 load TWO 02
+F00 end: halt 03
+001 ONE 001h 04
+002 TWO 002h 05

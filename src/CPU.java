@@ -8,7 +8,12 @@ public class CPU {
 
     public int cycle;
     private final Memory memory;
-    private final Control control;
+    private int programCounter;
+    private int accumulator;
+
+    private boolean halt;
+
+    // private final Control control;
 
     //debug values
     private int memWatchStart = -1;
@@ -16,81 +21,101 @@ public class CPU {
 
     public CPU() {
         memory = new Memory(1024);
-        control = new Control();
+        // control = new Control();
 
-        IF = new IF(memory, control);
-        ID = new ID(memory, control);
-        EX = new EX(memory, control);
-        MEM = new MEM(memory, control);
-        WB = new WB(memory, control);
+        IF = new IF(memory);
+        ID = new ID(memory);
+        EX = new EX(memory);
+        MEM = new MEM(memory);
+        WB = new WB(memory);
+        halt = false;
         cycle = 1;
     }
 
     public int run() {
         try {
-            while (!control.halt) {
+            while (!halt) {
                 singleStage();
             }
             return 0;
         } catch (Exception e) {
-            System.out.println("Encountered Exception on line " + control.programCounter);
+            System.out.println("Encountered Exception on line " + programCounter);
             e.printStackTrace();
             return 1;
         }
     }
 
     public void singleStage() throws Exception {
-        System.out.println(" ------------------------- ");
-        System.out.println("Program Counter: 0x" + String.format("%02X", control.programCounter));
-        System.out.println("Accumulator: 0x" + String.format("%03X", control.accumulator));
+        System.out.println("-- Cycle: " + cycle++ + " -----------------");
+        clockCycle();
+        
+        System.out.println("Program Counter: 0x" + String.format("%02X", programCounter));
+        System.out.println("Accumulator: 0x" + String.format("%03X", accumulator));
         if (memWatchEnd >= 0) {
             int[] memdump = memory.readMemory(memWatchStart, memWatchEnd - memWatchStart + 1);
             System.out.println("Memdump:");
             System.out.println(arrayToString(memdump));
         }
-
+        
         IF.process();
+        System.out.println("-- Cycle: " + cycle++ + " -----------------");
         clockCycle();
         ID.process();
+        System.out.println("-- Cycle: " + cycle++ + " -----------------");
         clockCycle();
         EX.process();
+        System.out.println("-- Cycle: " + cycle++ + " -----------------");
         clockCycle();
         MEM.process();
+        System.out.println("-- Cycle: " + cycle++ + " -----------------");
         clockCycle();
         WB.process();
-        clockCycle();
-        if (cycle > 500) {
-            control.halt = true;
-            System.out.println("Probably an issue :)");
+        programCounter++;
+        ID.flushPipelineQueue();
+        if (EX.shouldHalt) {
+            halt = true;
         }
 
+        if (cycle > 500) {
+            halt = true;
+            System.out.println("Probably an issue :)");
+        }
     }
 
     public void pipelineNaive() {
         try {
-            while (!control.halt) {
-                System.out.println(" ------------------------------ ");
-                System.out.println("Program Counter: 0x" + String.format("%02X", control.programCounter));
-                System.out.println("Accumulator: 0x" + String.format("%03X", control.accumulator));
+            while (!halt) {
+                System.out.println("-- Cycle: " + cycle++ + " -----------------");
+                clockCycle();
+                System.out.println("Program Counter: 0x" + String.format("%02X", programCounter));
+                System.out.println("Accumulator: 0x" + String.format("%03X", accumulator));
                 if (memWatchEnd >= 0) {
                     int[] memdump = memory.readMemory(memWatchStart, memWatchEnd - memWatchStart + 1);
                     System.out.println("Memdump:");
                     System.out.println(arrayToString(memdump));
                 }
-                clockCycle();
+                
                 IF.process();
                 ID.process();
                 EX.process();
                 MEM.process();
                 WB.process();
+                
+                if (EX.shouldHalt) {
+                    halt = true;
+                }
+
+                if(!ID.isStalled) {
+                    programCounter++;
+                }
 
                 if (cycle > 500) {
-                    control.halt = true;
+                    halt = true;
                     System.out.println("Probably an issue :)");
                 }
             }
         } catch (Exception e) {
-            System.out.println("Encountered Exception on line " + control.programCounter);
+            System.out.println("Encountered Exception on line " + programCounter);
             e.printStackTrace();
         }
     }
@@ -129,15 +154,26 @@ public class CPU {
     }
 
     public void clockCycle() {
-        System.out.println("-- Cycle: " + cycle++ + " -----------------");
-        control.cycleStages();
-        ID.inReg = IF.outReg;
-        EX.inReg = ID.outReg;
-        MEM.inReg = EX.outReg;
-        WB.inReg = MEM.outReg;
-        if (control.isStalling()) {
-            EX.outReg = null;
-            MEM.outReg = null;
+        IF.programCounterIn = programCounter;
+
+        if(!ID.isStalled) {
+            ID.rawInstructionIn = IF.fetchedInstructionOut;
+        }
+        
+        EX.accumulatorIn = accumulator;
+        EX.rawInstructionIn = ID.rawInstructionOut;
+
+        MEM.accumulatorIn = EX.accumulatorOut;
+        MEM.rawInstructionIn = EX.rawInstructionOut;
+        MEM.resultIn = EX.resultOut;
+
+        WB.rawInstructionIn = MEM.rawInstructionOut;
+        WB.resultIn = MEM.resultOut;
+
+        accumulator = WB.accumulatorOut;
+
+        if (EX.shouldJump) {
+            programCounter = EX.resultOut;
         }
     }
 

@@ -12,6 +12,7 @@ public class Instruction {
         ADD,
         SUB,
         HALT,
+        STALL,
         NOOP
     };
 
@@ -32,7 +33,23 @@ public class Instruction {
     }
 
     public boolean isMemory() {
-        return operation == OPERATION.LOAD || operation == OPERATION.STORE || operation == OPERATION.LOADI || operation == OPERATION.STOREI;
+        return isLoad() || isStore();
+    }
+
+    public boolean isLoad() {
+        return operation == OPERATION.LOAD || operation == OPERATION.LOADI;
+    }
+
+    public boolean isStore() {
+        return operation == OPERATION.STORE || operation == OPERATION.STOREI;
+    }
+
+    public boolean isHalt() {
+        return operation == OPERATION.HALT;
+    }
+
+    public boolean isNop() {
+        return !isHalt() && !isStore() && !isLoad() && !isMemory() && !isJump() && !isArithmetic();
     }
 
     public boolean isDataHazard() {
@@ -48,9 +65,26 @@ public class Instruction {
     }
 
     public static Instruction fromInt(int val) {
-        int operationBits = (val >> 12) & 0xF;
-        int operand = val & 0xFFF;
-        OPERATION operation = OPERATION.values()[operationBits];
+        int operationBits = (val >> 8) & 0xF;
+        int operand = val & 0xFF;
+        Instruction.OPERATION operation = switch (operationBits) {
+            case 0x0 -> Instruction.OPERATION.JMP;
+            case 0x1 -> Instruction.OPERATION.JN;
+            case 0x2 -> Instruction.OPERATION.JZ;
+            case 0x4 -> Instruction.OPERATION.LOAD;
+            case 0x5 -> Instruction.OPERATION.STORE;
+            case 0x6 -> Instruction.OPERATION.LOADI;
+            case 0x7 -> Instruction.OPERATION.STOREI;
+            case 0x8 -> Instruction.OPERATION.AND;
+            case 0x9 -> Instruction.OPERATION.OR;
+            case 0xA -> Instruction.OPERATION.ADD;
+            case 0xB -> Instruction.OPERATION.SUB;
+            case 0xC -> Instruction.OPERATION.STALL;
+            case 0xF -> Instruction.OPERATION.HALT;
+            default ->
+                // noop
+                    Instruction.OPERATION.NOOP;
+        };
         return new Instruction(operation, operand);
     }
 

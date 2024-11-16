@@ -1,45 +1,92 @@
+import java.rmi.server.Operation;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
+
 public class ID extends Stage {
 
-    private int rawInstruction;
+    public int rawInstructionIn;
+    public int rawInstructionOut;
+    public int programCounterIn;
+    public boolean isStalled;
     private Instruction decodedInstruction;
 
-    public ID(Memory memory, Control control) {
-        super(memory, control);
-        rawInstruction = 0;
+    private ArrayList<Instruction> pipelineQueue;
+
+    public ID(Memory memory) {
+        super(memory);
+        flushPipelineQueue();
+        rawInstructionIn = 0xD00;
+        rawInstructionOut = 0xD00;
+        programCounterIn = 0x000;
+        isStalled = false;
     }
 
     @Override
     public void process() {
-        if (this.inReg == null) {
-            System.out.println("ID - No input");
-            return;
+        // if (this.inReg == null) {
+        //     System.out.println("ID - No input");
+        //     return;
+        // }
+        // if (control.isStalling()) {
+        //     System.out.println("ID - Stalling - " + decodedInstruction);
+        //     return;
+        // }
+        pipelineQueue.removeLast();
+        decodedInstruction = Instruction.fromInt(rawInstructionIn);
+        System.out.println("pipeline queue");
+        for (Instruction instruction : pipelineQueue) {
+            System.out.println(instruction);
         }
-        if (control.isStalling()) {
-            System.out.println("ID - Stalling - " + decodedInstruction);
-            return;
+        if (dataHazard(decodedInstruction)) {
+            pipelineQueue.addFirst(new Instruction(Instruction.OPERATION.STALL, 0x00));
+            rawInstructionOut = 0xC00;
+            isStalled = true;
+            System.out.println("ID - " + decodedInstruction + " - Stalling due to DATA HAZARD");
         }
-        rawInstruction = this.inReg;
-        int instructionBits = (rawInstruction >> 8) & 0xF;
-        int operand = rawInstruction & 0x0FF;
-        Instruction.OPERATION operation = switch (instructionBits) {
-            case 0x0 -> Instruction.OPERATION.JMP;
-            case 0x1 -> Instruction.OPERATION.JN;
-            case 0x2 -> Instruction.OPERATION.JZ;
-            case 0x4 -> Instruction.OPERATION.LOAD;
-            case 0x5 -> Instruction.OPERATION.STORE;
-            case 0x6 -> Instruction.OPERATION.LOADI;
-            case 0x7 -> Instruction.OPERATION.STOREI;
-            case 0x8 -> Instruction.OPERATION.AND;
-            case 0x9 -> Instruction.OPERATION.OR;
-            case 0xA -> Instruction.OPERATION.ADD;
-            case 0xB -> Instruction.OPERATION.SUB;
-            case 0xF -> Instruction.OPERATION.HALT;
-            default ->
-                // noop
-                    Instruction.OPERATION.NOOP;
-        };
-        decodedInstruction = new Instruction(operation, operand);
-        System.out.println("ID - " + decodedInstruction);
-        this.outReg = decodedInstruction.toInt();
+        else if (controlHazard()) {
+            pipelineQueue.addFirst(new Instruction(Instruction.OPERATION.STALL, 0x00));
+            rawInstructionOut = 0xC00;
+            isStalled = true;
+            System.out.println("ID - " + decodedInstruction + " - Stalling due to CONTROL HAZARD");
+        }
+        else {
+            pipelineQueue.addFirst(decodedInstruction);
+            rawInstructionOut = rawInstructionIn;
+            isStalled = false;
+            System.out.println("ID - " + decodedInstruction);
+        }
+    }
+
+    private boolean dataHazard(Instruction currentInstruction) {
+        if (currentInstruction.isHalt()) {
+            System.out.println("isHalt");
+            for (int i = 0; i < 3; i++) {
+                Instruction instruction = pipelineQueue.get(i);
+                if(!instruction.isNop()) {
+                    System.out.println("should stall");
+                    return true;
+                }
+            }
+        }
+        for (int i = 0; i < 3; i++) {
+            Instruction instruction = pipelineQueue.get(i);
+            if(instruction.isDataHazard()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean controlHazard() {
+        return pipelineQueue.get(0).isJump();
+    }
+
+    public void flushPipelineQueue() {
+        pipelineQueue = new ArrayList<Instruction>();
+        pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
+        pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
+        pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
+        pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
     }
 }

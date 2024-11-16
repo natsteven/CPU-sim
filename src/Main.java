@@ -13,31 +13,36 @@ public class Main {
             System.out.println("Watching memory at " + String.format("%02X",addr1) + " to " + String.format("%02X",addr2));
             cpu.watchMem(addr1,addr2);
         }
+        String programFile = "max5.txt";
+        if(args.length >= 3) {
+            programFile = args[2];
+        }
         String program = null;
         try {
-            program = Files.readString(Paths.get("programs/max5.txt"));
+            program = Files.readString(Paths.get("programs/" + programFile));
         }
         catch(Exception e) {
-            e.printStackTrace();
+            
         }
         if(program == null) {
             try {
-                program = Files.readString(Paths.get("src/programs","max5.txt"));
+                program = Files.readString(Paths.get("src/programs",programFile));
             } catch (Exception e) {
-                e.printStackTrace();
+                
             }
         }
         if(program != null) {
             cpu.loadMemory(program);
-            cpu.run();
+            //cpu.run();
+            cpu.pipelineNaive();
         }
         else {
             System.out.println("Failed to load program");
         }
 
-        CPU newCPU = new CPU();
-        newCPU.loadMemory(program);
-        newCPU.pipelineNaive();
+        // CPU newCPU = new CPU();
+        // newCPU.loadMemory(program);
+        // newCPU.pipelineNaive();
     
 
     }

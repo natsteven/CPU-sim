@@ -1,93 +1,101 @@
 public class EX extends Stage {
 
+    // stage registers
+    public int rawInstructionIn;
+    public int rawInstructionOut;
+    public int accumulatorIn;
+    public int accumulatorOut;
+    public int resultOut;
+
+    // control signal
+    public boolean shouldHalt;
+    public boolean shouldJump;
+
     private Instruction instruction;
 
-    public EX(Memory memory, Control control) {
-        super(memory, control);
+    public EX(Memory memory) {
+        super(memory);
+        rawInstructionIn = 0xD00;
+        rawInstructionOut = 0xD00;
+        accumulatorIn = 0x000;
+        accumulatorOut = 0x000;
+        resultOut = 0x000;
     }
 
     @Override
     public void process() throws Exception {
-        stageControl = control.stages.get(2);
+        // stageControl = control.stages.get(2);
 
-        if (this.inReg == null) {
-            System.out.println("EX - No input");
-            return;
-        }
-        if (control.isStalling()) {
-            System.out.println("EX - Stalling");
-            return;
-        }
+        // if (this.inReg == null) {
+        //     System.out.println("EX - No input");
+        //     return;
+        // }
+        // if (control.isStalling()) {
+        //     System.out.println("EX - Stalling");
+        //     return;
+        // }
 
-        instruction = Instruction.fromInt(this.inReg);
-
-        if (instruction.isDataHazard()) {
-            control.dataHazard = true;
-        }
-        if (instruction.isJump()) {
-            control.controlHazard = true;
-        }
+        instruction = Instruction.fromInt(rawInstructionIn);
+        rawInstructionOut = rawInstructionIn;
+        accumulatorOut = accumulatorIn;
+        
+        shouldHalt = false;
 
         System.out.println("EX - " + instruction);
         if (instruction.isArithmetic()) {
             alu();
-            stageControl.alu = true;
+            // stageControl.alu = true;
         } else if (instruction.isJump()) {
             branch();
         } else if (instruction.isMemory()) {
             memoryPrep();
-            stageControl.memAcc = true;
+            // stageControl.memAcc = true;
         } else if (instruction.operation == Instruction.OPERATION.HALT) {
-            stageControl.halt = true;
+            shouldHalt = true;
         } else {
-            System.out.println("Instruction not recognized");
-            System.exit(1);
+            // noop - do nothing
         }
 
     }
 
     public void alu () throws Exception {
-        int accumulator = control.accumulator;
+        int result = 0;
         if (instruction.operation == Instruction.OPERATION.ADD) {
-            accumulator += as12bitInt(memory.readMemory(instruction.operand));
-            accumulator = accumulator & 0xFFF;
-        }else if (instruction.operation == Instruction.OPERATION.SUB) {
-            accumulator -= as12bitInt(memory.readMemory(instruction.operand));
-            accumulator = accumulator & 0xFFF;
+            result =  accumulatorIn + as12bitInt(memory.readMemory(instruction.operand));
+            result = result & 0xFFF;
+        } else if (instruction.operation == Instruction.OPERATION.SUB) {
+            result = accumulatorIn - as12bitInt(memory.readMemory(instruction.operand));
+            result = result & 0xFFF;
         } else if (instruction.operation == Instruction.OPERATION.AND) {
-            accumulator &= memory.readMemory(instruction.operand);
+            result = accumulatorIn & memory.readMemory(instruction.operand);
         } else if (instruction.operation == Instruction.OPERATION.OR) {
-            accumulator |= memory.readMemory(instruction.operand);
+            result = accumulatorIn | memory.readMemory(instruction.operand);
         }
-        this.outReg = accumulator;
+        this.resultOut = result;
     }
 
     public void branch () {
-        int accumulator = control.accumulator;
         if (instruction.operation == Instruction.OPERATION.JMP) {
-            stageControl.jump = true;
+            shouldJump = true;
         } else if (instruction.operation == Instruction.OPERATION.JN) {
-            if (as12bitInt(accumulator) < 0) {
-                stageControl.jump = true;
+            if (as12bitInt(accumulatorIn) < 0) {
+                shouldJump = true;
             }
         } else if (instruction.operation == Instruction.OPERATION.JZ) {
-            if (accumulator == 0) {
-                stageControl.jump = true;
+            if (accumulatorIn == 0) {
+                shouldJump = true;
             }
         }
-        control.controlHazard = false;
-        this.outReg = instruction.operand;
+        this.resultOut = instruction.operand;
     }
 
     public void memoryPrep() {
-        this.outReg = instruction.operand;
-        if (instruction.operation == Instruction.OPERATION.LOAD || instruction.operation == Instruction.OPERATION.LOADI) {
-            stageControl.loadOrStore = true;
-            stageControl.direct = (instruction.operation == Instruction.OPERATION.LOAD);
-        } else if (instruction.operation == Instruction.OPERATION.STORE || instruction.operation == Instruction.OPERATION.STOREI) {
-            stageControl.loadOrStore = false;
-            stageControl.direct = (instruction.operation == Instruction.OPERATION.STORE);
-        }
+        this.resultOut = instruction.operand;
+        // if (instruction.operation == Instruction.OPERATION.LOAD || instruction.operation == Instruction.OPERATION.LOADI) {
+        //     stageControl.direct = (instruction.operation == Instruction.OPERATION.LOAD);
+        // } else if (instruction.operation == Instruction.OPERATION.STORE || instruction.operation == Instruction.OPERATION.STOREI) {
+        //     stageControl.direct = (instruction.operation == Instruction.OPERATION.STORE);
+        // }
     }
 
     private static int as12bitInt(int arg) {

@@ -1,0 +1,46 @@
+0000 0
+JMP X
+PC ← X
+
+0001 1
+JN X
+If A<0 then PC ← X else PC++
+
+0010 2
+JZ X
+If A=0 then PC ← X else PC++
+
+0100 4
+LOAD X
+A ← M(X), PC++
+
+0101 5
+STORE X
+M(X) ← A, PC++
+
+0110 6
+LOADI
+A ← M(M(X)), PC++
+
+0111 7
+STOREI
+M(M(X)) ← A, PC++
+
+1000 8
+AND X
+A ← A and M(X), PC++
+
+1001 9
+OR X
+A ← A or M(X), PC++
+
+1010 A
+ADD X
+A ← A + M(X), PC++
+
+1011 B
+SUB X
+A ← A-M(X), PC++
+
+1111 F
+HALT
