@@ -22,9 +22,9 @@ public class ID extends Stage {
     public void process() {
         pipelineQueue.removeLast();
         Instruction decodedInstruction = Instruction.fromInt(rawInstructionIn);
-        System.out.println("pipeline queue");
+        System.out.println("\tpipeline queue");
         for (Instruction instruction : pipelineQueue) {
-            System.out.println(instruction);
+            System.out.println("\t" + instruction);
         }
         if (dataHazard()) {
             pipelineQueue.addFirst(new Instruction(Instruction.OPERATION.STALL, 0x00));
@@ -72,10 +72,8 @@ public class ID extends Stage {
 
     private boolean halt(Instruction currentInstruction) {
         if (currentInstruction.isHalt()) {
-            System.out.println("isHalt");
             for (Instruction instruction : pipelineQueue) {
                 if(!instruction.isNop()) {
-                    System.out.println("should stall");
                     return true;
                 }
             }

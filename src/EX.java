@@ -29,6 +29,7 @@ public class EX extends Stage {
         accumulatorOut = accumulatorIn;
         
         shouldHalt = false;
+        shouldJump = false;
 
         System.out.println("EX - " + instruction);
         if (instruction.isArithmetic()) {

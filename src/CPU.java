@@ -33,7 +33,7 @@ public class CPU {
         MEM = new MEM(memory);
         WB = new WB(memory);
         halt = false;
-        cycle = 1;
+        cycle = 0;
     }
 
     public int run() {
@@ -74,13 +74,15 @@ public class CPU {
         System.out.println("-- Cycle: " + cycle++ + " -----------------");
         clockCycle();
         WB.process();
-        programCounter++;
+        if (!EX.shouldJump) {
+            programCounter++;
+        }
         ID.flushPipelineQueue();
         if (EX.shouldHalt) {
             halt = true;
         }
 
-        if (cycle > 500) {
+        if (cycle > 1000) {
             halt = true;
             System.out.println("Probably an issue :)");
         }
@@ -90,7 +92,7 @@ public class CPU {
         try {
             while (!halt) {
                 System.out.println("-- Cycle: " + cycle++ + " -----------------");
-                clockCycle();
+                clockCyclePipelined();
                 System.out.println("Program Counter: 0x" + String.format("%02X", programCounter));
                 System.out.println("Accumulator: 0x" + String.format("%03X", accumulator));
                 if (memWatchEnd >= 0) {
@@ -169,6 +171,8 @@ public class CPU {
             ID.rawInstructionIn = IF.fetchedInstructionOut;
         }
 
+        
+
         EX.accumulatorIn = accumulator;
         EX.rawInstructionIn = ID.rawInstructionOut;
 
@@ -181,8 +185,42 @@ public class CPU {
 
         accumulator = WB.accumulatorOut;
 
+        
+
         if (EX.shouldJump) { // forwarding?
             programCounter = EX.resultOut;
+        }
+    }
+
+    public void clockCyclePipelined() {
+        
+        IF.programCounterIn = programCounter;
+
+        if(!ID.isStalled) {
+            ID.rawInstructionIn = IF.fetchedInstructionOut;
+        }
+
+        accumulator = WB.accumulatorOut;
+
+        EX.accumulatorIn = accumulator;
+        EX.rawInstructionIn = ID.rawInstructionOut;
+
+        MEM.accumulatorIn = EX.accumulatorOut;
+        MEM.rawInstructionIn = EX.rawInstructionOut;
+        MEM.resultIn = EX.resultOut;
+
+        WB.rawInstructionIn = MEM.rawInstructionOut;
+        WB.resultIn = MEM.resultOut;
+
+        
+
+        if (EX.shouldJump) { // forwarding?
+            programCounter = EX.resultOut;
+            System.out.println("jumping and flushing");
+            // IF.programCounterIn = programCounter;
+            IF.fetchedInstructionOut = 0xC00; // flush prev pipeline steps
+            ID.rawInstructionIn = 0xC00;
+            ID.flushPipelineQueue();
         }
     }
 
