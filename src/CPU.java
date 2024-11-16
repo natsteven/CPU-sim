@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class CPU {
     // Stages
     private final IF IF;
@@ -10,10 +12,9 @@ public class CPU {
     private final Memory memory;
     private int programCounter;
     private int accumulator;
+//    private ArrayList<Instruction> pipeline;
 
     private boolean halt;
-
-    // private final Control control;
 
     //debug values
     private int memWatchStart = -1;
@@ -21,7 +22,10 @@ public class CPU {
 
     public CPU() {
         memory = new Memory(1024);
-        // control = new Control();
+//        pipeline = new ArrayList<>();
+//        for (int i = 0; i < 5; i++) { // adding 5 NOOPs to pipeline
+//            pipeline.add(new Instruction(Instruction.OPERATION.NOOP, 0x00));
+//        }
 
         IF = new IF(memory);
         ID = new ID(memory);
@@ -154,12 +158,17 @@ public class CPU {
     }
 
     public void clockCycle() {
+
+//        // pipeline represent where the instructions just were
+//        pipeline.removeLast();
+//        pipeline.add(Instruction.fromInt(IF.fetchedInstructionOut));
+
         IF.programCounterIn = programCounter;
 
         if(!ID.isStalled) {
             ID.rawInstructionIn = IF.fetchedInstructionOut;
         }
-        
+
         EX.accumulatorIn = accumulator;
         EX.rawInstructionIn = ID.rawInstructionOut;
 
@@ -172,7 +181,7 @@ public class CPU {
 
         accumulator = WB.accumulatorOut;
 
-        if (EX.shouldJump) {
+        if (EX.shouldJump) { // forwarding?
             programCounter = EX.resultOut;
         }
     }

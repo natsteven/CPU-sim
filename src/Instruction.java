@@ -56,6 +56,14 @@ public class Instruction {
         return isArithmetic() || operation == OPERATION.LOAD || operation == OPERATION.LOADI;
     }
 
+    public boolean isControlHazard() {
+        return isJump();
+    }
+
+    public boolean isHazard() {
+        return isDataHazard() || isControlHazard();
+    }
+
     public String toString() {
         return "Operation: " + operation.toString() + ", operand: 0x" + String.format("%02X",operand);
     }

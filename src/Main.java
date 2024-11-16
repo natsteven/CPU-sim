@@ -1,5 +1,3 @@
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -39,10 +37,6 @@ public class Main {
         else {
             System.out.println("Failed to load program");
         }
-
-        // CPU newCPU = new CPU();
-        // newCPU.loadMemory(program);
-        // newCPU.pipelineNaive();
     
 
     }

@@ -10,13 +10,7 @@ public class IF extends Stage {
     }
 
     public void process() throws Exception {
-        // if (control.isStalling()) {
-        //     System.out.println("IF - Stalling - 0x" + String.format("%03X",fetchedInstruction));
-        //     return;
-        // }
-
         fetchedInstructionOut = memory.readMemory(programCounterIn);
-        //System.out.println(String.format("0x%08X", 1));
         System.out.println("IF - 0x" + String.format("%03X",fetchedInstructionOut));
     }
 

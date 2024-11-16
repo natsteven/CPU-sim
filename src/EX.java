@@ -24,17 +24,6 @@ public class EX extends Stage {
 
     @Override
     public void process() throws Exception {
-        // stageControl = control.stages.get(2);
-
-        // if (this.inReg == null) {
-        //     System.out.println("EX - No input");
-        //     return;
-        // }
-        // if (control.isStalling()) {
-        //     System.out.println("EX - Stalling");
-        //     return;
-        // }
-
         instruction = Instruction.fromInt(rawInstructionIn);
         rawInstructionOut = rawInstructionIn;
         accumulatorOut = accumulatorIn;
@@ -44,12 +33,10 @@ public class EX extends Stage {
         System.out.println("EX - " + instruction);
         if (instruction.isArithmetic()) {
             alu();
-            // stageControl.alu = true;
         } else if (instruction.isJump()) {
             branch();
         } else if (instruction.isMemory()) {
-            memoryPrep();
-            // stageControl.memAcc = true;
+            this.resultOut = instruction.operand;
         } else if (instruction.operation == Instruction.OPERATION.HALT) {
             shouldHalt = true;
         } else {
@@ -87,15 +74,6 @@ public class EX extends Stage {
             }
         }
         this.resultOut = instruction.operand;
-    }
-
-    public void memoryPrep() {
-        this.resultOut = instruction.operand;
-        // if (instruction.operation == Instruction.OPERATION.LOAD || instruction.operation == Instruction.OPERATION.LOADI) {
-        //     stageControl.direct = (instruction.operation == Instruction.OPERATION.LOAD);
-        // } else if (instruction.operation == Instruction.OPERATION.STORE || instruction.operation == Instruction.OPERATION.STOREI) {
-        //     stageControl.direct = (instruction.operation == Instruction.OPERATION.STORE);
-        // }
     }
 
     private static int as12bitInt(int arg) {

@@ -1,7 +1,4 @@
-import java.rmi.server.Operation;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
 
 public class ID extends Stage {
 
@@ -9,7 +6,6 @@ public class ID extends Stage {
     public int rawInstructionOut;
     public int programCounterIn;
     public boolean isStalled;
-    private Instruction decodedInstruction;
 
     private ArrayList<Instruction> pipelineQueue;
 
@@ -24,21 +20,13 @@ public class ID extends Stage {
 
     @Override
     public void process() {
-        // if (this.inReg == null) {
-        //     System.out.println("ID - No input");
-        //     return;
-        // }
-        // if (control.isStalling()) {
-        //     System.out.println("ID - Stalling - " + decodedInstruction);
-        //     return;
-        // }
         pipelineQueue.removeLast();
-        decodedInstruction = Instruction.fromInt(rawInstructionIn);
+        Instruction decodedInstruction = Instruction.fromInt(rawInstructionIn);
         System.out.println("pipeline queue");
         for (Instruction instruction : pipelineQueue) {
             System.out.println(instruction);
         }
-        if (dataHazard(decodedInstruction)) {
+        if (dataHazard()) {
             pipelineQueue.addFirst(new Instruction(Instruction.OPERATION.STALL, 0x00));
             rawInstructionOut = 0xC00;
             isStalled = true;
@@ -49,6 +37,11 @@ public class ID extends Stage {
             rawInstructionOut = 0xC00;
             isStalled = true;
             System.out.println("ID - " + decodedInstruction + " - Stalling due to CONTROL HAZARD");
+        } else if (halt(decodedInstruction)) {
+            pipelineQueue.addFirst(new Instruction(Instruction.OPERATION.STALL, 0x00));
+            rawInstructionOut = 0xC00;
+            isStalled = true;
+            System.out.println("ID - " + decodedInstruction + " - Stalling due to HALT");
         }
         else {
             pipelineQueue.addFirst(decodedInstruction);
@@ -58,19 +51,8 @@ public class ID extends Stage {
         }
     }
 
-    private boolean dataHazard(Instruction currentInstruction) {
-        if (currentInstruction.isHalt()) {
-            System.out.println("isHalt");
-            for (int i = 0; i < 3; i++) {
-                Instruction instruction = pipelineQueue.get(i);
-                if(!instruction.isNop()) {
-                    System.out.println("should stall");
-                    return true;
-                }
-            }
-        }
-        for (int i = 0; i < 3; i++) {
-            Instruction instruction = pipelineQueue.get(i);
+    private boolean dataHazard() {
+        for (Instruction instruction : pipelineQueue) {
             if(instruction.isDataHazard()) {
                 return true;
             }
@@ -78,8 +60,27 @@ public class ID extends Stage {
         return false;
     }
 
-    private boolean controlHazard() {
-        return pipelineQueue.get(0).isJump();
+    private boolean controlHazard() { // since we are doing forwarding after EX we can just check the first instruction
+//        for (Instruction instruction : pipelineQueue) {
+//            if(instruction.isControlHazard()) {
+//                return true;
+//            }
+//        }
+//        return false;
+        return pipelineQueue.getFirst().isControlHazard();
+    }
+
+    private boolean halt(Instruction currentInstruction) {
+        if (currentInstruction.isHalt()) {
+            System.out.println("isHalt");
+            for (Instruction instruction : pipelineQueue) {
+                if(!instruction.isNop()) {
+                    System.out.println("should stall");
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void flushPipelineQueue() {
@@ -87,6 +88,7 @@ public class ID extends Stage {
         pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
         pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
         pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
-        pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
+//        pipelineQueue.add(new Instruction(Instruction.OPERATION.NOOP,0x00));
     }
+
 }
