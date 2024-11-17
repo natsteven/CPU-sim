@@ -27,7 +27,7 @@ public class EX extends Stage {
         instruction = Instruction.fromInt(rawInstructionIn);
         rawInstructionOut = rawInstructionIn;
         accumulatorOut = accumulatorIn;
-        
+
         shouldHalt = false;
         shouldJump = false;
 
@@ -46,10 +46,10 @@ public class EX extends Stage {
 
     }
 
-    public void alu () throws Exception {
+    public void alu() throws Exception {
         int result = 0;
         if (instruction.operation == Instruction.OPERATION.ADD) {
-            result =  accumulatorIn + as12bitInt(memory.readMemory(instruction.operand));
+            result = accumulatorIn + as12bitInt(memory.readMemory(instruction.operand));
             result = result & 0xFFF;
         } else if (instruction.operation == Instruction.OPERATION.SUB) {
             result = accumulatorIn - as12bitInt(memory.readMemory(instruction.operand));
@@ -62,7 +62,7 @@ public class EX extends Stage {
         this.resultOut = result;
     }
 
-    public void branch () {
+    public void branch() {
         if (instruction.operation == Instruction.OPERATION.JMP) {
             shouldJump = true;
         } else if (instruction.operation == Instruction.OPERATION.JN) {
@@ -78,7 +78,7 @@ public class EX extends Stage {
     }
 
     private static int as12bitInt(int arg) {
-        return (arg << (32-12))>>(32-12);
+        return (arg << (32 - 12)) >> (32 - 12);
     }
 
 }

@@ -56,7 +56,7 @@ public class CPU {
     public void singleStage() throws Exception {
         System.out.println("-- Cycle: " + cycle++ + " -----------------");
         clockCycle();
-        
+
         System.out.println("Program Counter: 0x" + String.format("%02X", programCounter));
         System.out.println("Accumulator: 0x" + String.format("%03X", accumulator));
         if (memWatchEnd >= 0) {
@@ -64,7 +64,7 @@ public class CPU {
             System.out.println("Memdump:");
             System.out.println(arrayToString(memdump));
         }
-        
+
         IF.process();
         System.out.println("-- Cycle: " + cycle++ + " -----------------");
         clockCycle();
@@ -104,7 +104,7 @@ public class CPU {
                     System.out.println("Memdump:");
                     System.out.println(arrayToString(memdump));
                 }
-                
+
                 IF.process();
                 ID.process();
                 EX.process();
@@ -120,6 +120,44 @@ public class CPU {
                 }
 
                 if (cycle > 500) {
+                    halt = true;
+                    System.out.println("Probably an issue :)");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Encountered Exception on line " + programCounter);
+            e.printStackTrace();
+        }
+    }
+
+    public void pipeForwarding() {
+        try {
+            while (!halt) {
+                System.out.println("-- Cycle: " + cycle++ + " -----------------");
+                clockCyclePipeFwd();
+                System.out.println("Program Counter: 0x" + String.format("%02X", programCounter));
+                System.out.println("Accumulator: 0x" + String.format("%03X", accumulator));
+                if (memWatchEnd >= 0) {
+                    int[] memdump = memory.readMemory(memWatchStart, memWatchEnd - memWatchStart + 1);
+                    System.out.println("Memdump:");
+                    System.out.println(arrayToString(memdump));
+                }
+
+                IF.process();
+                ID.forwardProcess();
+                EX.process();
+                MEM.process();
+                WB.process();
+
+                if (EX.shouldHalt) {
+                    halt = true;
+                }
+
+                if(!ID.isStalled) {
+                    programCounter++;
+                }
+
+                if (cycle > 130) {
                     halt = true;
                     System.out.println("Probably an issue :)");
                 }
@@ -217,6 +255,43 @@ public class CPU {
         WB.resultIn = MEM.resultOut;
 
         
+
+        if (EX.shouldJump) { // forwarding?
+            programCounter = EX.resultOut;
+            System.out.println("jumping and flushing");
+            IF.programCounterIn = programCounter;
+            IF.fetchedInstructionOut = 0xC00; // flush prev pipeline steps
+            ID.rawInstructionIn = 0xC00;
+            ID.flushPipelineQueue();
+        }
+    }
+
+    public void clockCyclePipeFwd() {
+
+        IF.programCounterIn = programCounter;
+
+        if(!ID.isStalled) {
+            ID.rawInstructionIn = IF.fetchedInstructionOut;
+        }
+
+        accumulator = WB.accumulatorOut;
+
+        if (ID.shouldForward()) { // check pipeline contains a datahazard
+            EX.accumulatorIn = EX.resultOut;
+        } else {
+            EX.accumulatorIn = accumulator;
+        }
+
+        EX.rawInstructionIn = ID.rawInstructionOut;
+
+        MEM.accumulatorIn = EX.accumulatorOut;
+        MEM.rawInstructionIn = EX.rawInstructionOut;
+        MEM.resultIn = EX.resultOut;
+
+        WB.rawInstructionIn = MEM.rawInstructionOut;
+        WB.resultIn = MEM.resultOut;
+
+
 
         if (EX.shouldJump) { // forwarding?
             programCounter = EX.resultOut;

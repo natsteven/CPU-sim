@@ -6,6 +6,8 @@ public class Main {
 
         CPU cpu1  = new CPU();
         CPU cpu2 = new CPU();
+        CPU cpu3 = new CPU();
+
         if(args.length >= 2) {
             int addr1 = Integer.parseInt(args[0],16);
             int addr2 = Integer.parseInt(args[1],16);
@@ -34,12 +36,16 @@ public class Main {
         if(program != null) {
             cpu1.loadMemory(program);
             cpu2.loadMemory(program);
+            cpu3.loadMemory(program);
+
             cpu1.run();
             cpu2.pipelineNaive();
+            cpu3.pipeForwarding();
 
             System.out.println("Cycles for " + programFile + ":");
             System.out.println("non-pipelined: " + cpu1.cycle);
             System.out.println("pipelined: " + cpu2.cycle + " stalls: " + cpu2.getStalls());
+            System.out.println("pipelined with forwarding: " + cpu3.cycle + " stalls: " + cpu3.getStalls());
         }
         else {
             System.out.println("Failed to load program");
