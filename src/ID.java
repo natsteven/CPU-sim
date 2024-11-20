@@ -4,7 +4,6 @@ public class ID extends Stage {
 
     public int rawInstructionIn;
     public int rawInstructionOut;
-    public int programCounterIn;
     public boolean isStalled;
     public int stallCounter;
 
@@ -16,7 +15,6 @@ public class ID extends Stage {
         flushPipelineQueue();
         rawInstructionIn = 0xD00;
         rawInstructionOut = 0xD00;
-        programCounterIn = 0x000;
         isStalled = false;
         stallCounter = 0;
     }

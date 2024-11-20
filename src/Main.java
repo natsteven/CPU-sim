@@ -14,6 +14,7 @@ public class Main {
             System.out.println("Watching memory at " + String.format("%02X",addr1) + " to " + String.format("%02X",addr2));
             cpu1.watchMem(addr1,addr2);
             cpu2.watchMem(addr1,addr2);
+            cpu3.watchMem(addr1,addr2);
         }
         String programFile = "max5.txt";
         if(args.length >= 3) {
